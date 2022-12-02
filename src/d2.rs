@@ -2513,9 +2513,8 @@ A Z"#
             ("C", "X") => 0 + 2,
             ("C", "Y") => 3 + 3,
             ("C", "Z") => 6 + 1,
-            other => unreachable!("{other:?}")
-        }
-        )
+            other => unreachable!("{other:?}"),
+        })
         .sum::<i64>();
 
     println!("{pairs:?}");

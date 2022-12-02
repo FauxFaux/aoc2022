@@ -8,7 +8,7 @@ pub fn solve() {
     for line in io::BufReader::new(
         fs::File::open(std::env::args_os().nth(1).expect("usage: input")).expect("open"),
     )
-        .lines()
+    .lines()
     {
         let line = line.expect("line");
         let line = line.trim();
