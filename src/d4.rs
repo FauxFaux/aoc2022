@@ -9,7 +9,7 @@ pub fn solve() {
     // println!("{}", ranges.len());
     let count = ranges
         .into_iter()
-        .filter(|(a, b)| (a.0 >= b.0 && a.1 <= b.1) || (b.0 >= a.0 && b.1 <= a.1))
+        .filter(|(a, b)| (b.0..=b.1).into_iter().any(|b| (a.0..=a.1).contains(&b)))
         .count();
     println!("{count:#?}")
 }
