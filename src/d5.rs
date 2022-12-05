@@ -39,10 +39,11 @@ pub fn solve() {
         .collect_vec();
 
     for (count, source, dest) in moves.into_iter() {
-        for _ in 0..count {
-            let item = g[source].pop().unwrap();
-            g[dest].push(item);
-        }
+        let src = &mut g[source];
+        let rem = src.len() - count;
+        let taken = src[rem..].to_vec();
+        g[dest].extend(taken);
+        g[source].truncate(rem);
     }
 
     println!("{g:?}");
