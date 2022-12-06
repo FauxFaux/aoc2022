@@ -1,12 +1,14 @@
 use itertools::Itertools;
 use maplit::hashset;
+use std::collections::HashSet;
 
 pub fn solve() {
     let pos = include_str!("d6.txt")
         .chars()
-        .tuple_windows()
-        .position(|(a, b, c, d)| hashset! {a,b,c,d}.len() == 4)
+        .collect_vec()
+        .windows(14)
+        .position(|x| x.iter().collect::<HashSet<_>>().len() == 14)
         .unwrap()
-        + 4;
+        + 14;
     println!("{pos:?}")
 }
