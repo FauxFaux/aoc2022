@@ -48,6 +48,13 @@ pub fn solve() {
 
     println!("{cont:#?}");
 
+    let to_free = 30000000
+        - (70000000
+            - cont
+                .iter()
+                .map(|(_, v)| v.iter().sum::<usize>())
+                .sum::<usize>());
+
     let mut sizes = Vec::new();
 
     for (k, v) in cont.iter() {
@@ -58,13 +65,11 @@ pub fn solve() {
             }
         }
 
-        sizes.push(size);
+        sizes.push((k.clone(), size));
     }
 
-    println!(
-        "{}",
-        sizes.into_iter().filter(|&x| x <= 100000).sum::<usize>()
-    );
+    sizes.sort_by_key(|(_, v)| *v);
+    println!("{:?}", sizes.iter().find(|(_, v)| *v >= to_free).unwrap());
 }
 
 fn p(s: &str) -> usize {
