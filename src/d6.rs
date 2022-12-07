@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use maplit::hashset;
 use std::collections::HashSet;
 
 pub fn solve() {

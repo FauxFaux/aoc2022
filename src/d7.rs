@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use std::collections::HashMap;
 
 pub fn solve() {
@@ -33,8 +32,8 @@ pub fn solve() {
                     .unwrap_or_default()
                 {
                     match lines.next().expect("peeked").split_once(' ') {
-                        Some(("dir", name)) => (),
-                        Some((size, name)) => {
+                        Some(("dir", _name)) => (),
+                        Some((size, _name)) => {
                             stuff.push(p(size));
                         }
                         other => unreachable!("{other:?}"),
@@ -57,7 +56,7 @@ pub fn solve() {
 
     let mut sizes = Vec::new();
 
-    for (k, v) in cont.iter() {
+    for (k, _v) in cont.iter() {
         let mut size = 0;
         for (s, sv) in cont.iter() {
             if s.starts_with(&k) {
