@@ -16,10 +16,10 @@ pub fn solve() {
             let us = g[y][x];
             let mut visible = 1;
             visible *= m((0..x).rev(), |ix| g[y][ix] >= us);
-            visible *= n(x + 1..r, |ix| g[y][ix] >= us);
+            visible *= m(x + 1..r, |ix| g[y][ix] >= us);
 
             visible *= m((0..y).rev(), |iy| g[iy][x] >= us);
-            visible *= n(y + 1..b, |iy| g[iy][x] >= us);
+            visible *= m(y + 1..b, |iy| g[iy][x] >= us);
 
             println!("{x} {y} ({us}): {visible}");
             sum = sum.max(visible);
@@ -28,14 +28,15 @@ pub fn solve() {
     println!("{sum}");
 }
 
-fn m(mut range: Rev<Range<usize>>, sub: impl FnMut(usize) -> bool) -> usize {
-    let len = range.len();
-    range.position(sub).map(|x| x + 1).unwrap_or(len)
-}
-
-fn n(mut range: Range<usize>, sub: impl FnMut(usize) -> bool) -> usize {
-    let len = range.len();
-    range.position(sub).map(|x| x + 1).unwrap_or(len)
+fn m(
+    range: impl Iterator<Item = usize> + ExactSizeIterator + Clone,
+    sub: impl FnMut(usize) -> bool,
+) -> usize {
+    range
+        .clone()
+        .position(sub)
+        .map(|x| x + 1)
+        .unwrap_or(range.len())
 }
 
 fn p(s: &str) -> usize {
