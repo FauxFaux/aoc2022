@@ -1,4 +1,6 @@
 use itertools::Itertools;
+use std::iter::Rev;
+use std::ops::Range;
 
 pub fn solve() {
     let g: Vec<Vec<u8>> = include_str!("d8.txt")
@@ -12,19 +14,28 @@ pub fn solve() {
     for y in 0..b {
         for x in 0..r {
             let us = g[y][x];
-            if x == 0 || y == 0 || x == r - 1 || y == b - 1 {}
-            let mut visible = false;
-            visible |= (0..x).all(|ix| g[y][ix] < us);
-            visible |= (x + 1..r).all(|ix| g[y][ix] < us);
+            let mut visible = 1;
+            visible *= m((0..x).rev(), |ix| g[y][ix] >= us);
+            visible *= n(x + 1..r, |ix| g[y][ix] >= us);
 
-            visible |= (0..y).all(|iy| g[iy][x] < us);
-            visible |= (y + 1..b).all(|iy| g[iy][x] < us);
+            visible *= m((0..y).rev(), |iy| g[iy][x] >= us);
+            visible *= n(y + 1..b, |iy| g[iy][x] >= us);
 
             println!("{x} {y} ({us}): {visible}");
-            sum += if visible { 1 } else { 0 };
+            sum = sum.max(visible);
         }
     }
     println!("{sum}");
+}
+
+fn m(mut range: Rev<Range<usize>>, sub: impl FnMut(usize) -> bool) -> usize {
+    let len = range.len();
+    range.position(sub).map(|x| x + 1).unwrap_or(len)
+}
+
+fn n(mut range: Range<usize>, sub: impl FnMut(usize) -> bool) -> usize {
+    let len = range.len();
+    range.position(sub).map(|x| x + 1).unwrap_or(len)
 }
 
 fn p(s: &str) -> usize {
