@@ -1,6 +1,4 @@
 use itertools::Itertools;
-use std::iter::Rev;
-use std::ops::Range;
 
 pub fn solve() {
     let g: Vec<Vec<u8>> = include_str!("d8.txt")
@@ -37,8 +35,4 @@ fn m(
         .position(sub)
         .map(|x| x + 1)
         .unwrap_or(range.len())
-}
-
-fn p(s: &str) -> usize {
-    s.parse().unwrap()
 }
