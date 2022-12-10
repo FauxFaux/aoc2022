@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::{HashSet};
+use std::collections::HashSet;
 
 type Coord = (i64, i64);
 
