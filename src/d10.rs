@@ -9,18 +9,17 @@ pub fn solve() {
 
     println!("{cmds:?}");
 
-    let mut sum = 0;
+    let mut pixels = [false; 240];
 
-    let mut check = |pc, x| match pc {
-        20 | 60 | 100 | 140 | 180 | 220 => {
-            sum += pc * x;
-            println!("{pc} {x}");
+    let mut check = |pc, x| {
+        let off = (pc as i64 - 1) % 40;
+        if x >= off - 1 && x <= off + 1 {
+            pixels[pc - 1] = true;
         }
-        _ => (),
     };
 
-    let mut x = 1;
-    let mut pc = 0;
+    let mut x = 1i64;
+    let mut pc = 0usize;
 
     for cmd in cmds {
         match cmd {
@@ -38,7 +37,14 @@ pub fn solve() {
         }
     }
 
-    println!("{sum}");
+    let grid = pixels
+        .iter()
+        .map(|&x| if x { '#' } else { '.' })
+        .collect::<String>();
+    let splut = regex::Regex::new("(.{40})")
+        .unwrap()
+        .replace_all(&grid, "$1\n");
+    println!("{splut}");
 }
 
 fn p(s: &str) -> i64 {
