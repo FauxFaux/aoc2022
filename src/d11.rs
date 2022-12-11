@@ -15,9 +15,10 @@ pub fn solve() {
         })
         .collect_vec();
 
+    let all_tests = monk.iter().map(|m| m.2).product::<i64>();
     let mut inspections = vec![0usize; monk.len()];
     let mut curs: Vec<Vec<i64>> = monk.iter().map(|(s, _, _, _, _)| s.clone()).collect_vec();
-    for round in 0..20 {
+    for round in 0..10000 {
         for mn in 0..curs.len() {
             let (_s, op, test, tru, fals) = &monk[mn];
             let this_monk = curs[mn].clone();
@@ -38,7 +39,7 @@ pub fn solve() {
                     other => todo!("{other:?}"),
                 }
 
-                item /= 3;
+                item %= all_tests;
 
                 let next = *if item % test == 0 { tru } else { fals };
                 println!("round: {round} monkey: {mn} item new value: {item} thrown to: {next}");
