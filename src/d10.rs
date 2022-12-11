@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use std::collections::HashSet;
 
 pub fn solve() {
     let cmds = include_str!("d10.txt")
