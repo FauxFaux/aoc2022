@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 type Pos = (usize, usize);
 
@@ -10,8 +10,9 @@ pub fn solve() {
         .map(|l| l.chars().collect_vec())
         .collect_vec();
 
-    let start = find(&grid, 'S');
-    let end = find(&grid, 'E');
+    let start = find(&grid, 'S')[0];
+    let new_starts = find(&grid, 'a');
+    let end = find(&grid, 'E')[0];
 
     let grid = grid
         .into_iter()
@@ -26,20 +27,33 @@ pub fn solve() {
         })
         .collect_vec();
 
+    assert_eq!(472, search(&grid, start, end));
+    println!(
+        "{:?}",
+        new_starts
+            .into_iter()
+            .map(|start| search(&grid, start, end))
+            .min()
+    )
+}
+
+fn search(grid: &[Vec<u8>], start: Pos, end: Pos) -> usize {
     let h = grid.len();
     let w = grid[0].len();
     let mut best = HashMap::new();
     let mut queue = Vec::new();
     best.insert(start, 0usize);
     queue.push(start);
-    'outer: for depth in 0usize.. {
+    for depth in 0usize.. {
         let now = queue.clone();
         queue.clear();
-        println!("{depth} {now:?}");
-        assert!(!now.is_empty());
+        // println!("{depth} {now:?}");
+        if now.is_empty() {
+            return usize::MAX;
+        }
         for loc in now {
             if loc == end {
-                break 'outer;
+                return depth;
             }
 
             let here = grid[loc.1][loc.0];
@@ -58,7 +72,6 @@ pub fn solve() {
                 }
 
                 if best.contains_key(&mv) {
-                    println!("can't move {mv:?} as already visited");
                     continue;
                 }
                 best.insert(mv, depth);
@@ -66,17 +79,19 @@ pub fn solve() {
             }
         }
     }
+    unreachable!()
 }
 
-fn find(grid: &[Vec<char>], c: char) -> (usize, usize) {
+fn find(grid: &[Vec<char>], c: char) -> Vec<(usize, usize)> {
+    let mut ret = Vec::new();
     for y in 0..grid.len() {
         for x in 0..grid[0].len() {
             if grid[y][x] == c {
-                return (x, y);
+                ret.push((x, y));
             }
         }
     }
-    panic!("not found: {c}")
+    ret
 }
 
 fn c(v: u8) -> char {
