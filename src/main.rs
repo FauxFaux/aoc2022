@@ -1,6 +1,7 @@
 mod d1;
 mod d10;
 mod d11;
+mod d12;
 mod d2;
 mod d3;
 mod d4;
@@ -11,7 +12,7 @@ mod d8;
 mod d9;
 
 fn main() {
-    match 11 {
+    match 12 {
         1 => d1::solve(),
         2 => d2::solve(),
         3 => d3::solve(),
@@ -23,6 +24,7 @@ fn main() {
         9 => d9::solve(),
         10 => d10::solve(),
         11 => d11::solve(),
+        12 => d12::solve(),
         _ => unreachable!(),
     }
 }
