@@ -26,52 +26,46 @@ pub fn solve() {
         })
         .collect_vec();
 
-    println!("{}", search(&grid, (start, end), &mut HashMap::new()));
-}
-
-fn search(grid: &[Vec<u8>], (start, end): (Pos, Pos), memo: &mut HashMap<Pos, usize>) -> usize {
-    if let Some(result) = memo.get(&start) {
-        return *result;
-    }
     let h = grid.len();
     let w = grid[0].len();
+    let mut best = HashMap::new();
+    let mut queue = Vec::new();
+    best.insert(start, 0usize);
+    queue.push(start);
+    'outer: for depth in 0usize.. {
+        let now = queue.clone();
+        queue.clear();
+        println!("{depth} {now:?}");
+        assert!(!now.is_empty());
+        for loc in now {
+            if loc == end {
+                break 'outer;
+            }
 
-    if start == end {
-        return 0;
-    }
+            let here = grid[loc.1][loc.0];
+            for mv in [
+                (loc.0 + 1, loc.1),
+                (loc.0.checked_sub(1).unwrap_or(usize::MAX), loc.1),
+                (loc.0, loc.1 + 1),
+                (loc.0, loc.1.checked_sub(1).unwrap_or(usize::MAX)),
+            ] {
+                if mv.0 >= w || mv.1 >= h {
+                    continue;
+                }
+                let prop = grid[mv.1][mv.0];
+                if prop > here + 1 {
+                    continue;
+                }
 
-    let here = grid[start.1][start.0];
-
-    // println!("visiting {start:?}");
-
-    let mut opts = Vec::new();
-    for mv in [
-        (start.0 + 1, start.1),
-        (start.0.checked_sub(1).unwrap_or(usize::MAX), start.1),
-        (start.0, start.1 + 1),
-        (start.0, start.1.checked_sub(1).unwrap_or(usize::MAX)),
-    ] {
-        if mv.0 >= w || mv.1 >= h {
-            continue;
+                if best.contains_key(&mv) {
+                    println!("can't move {mv:?} as already visited");
+                    continue;
+                }
+                best.insert(mv, depth);
+                queue.push(mv);
+            }
         }
-        let prop = grid[mv.1][mv.0];
-        if prop > here + 1 {
-            continue;
-        }
-        let res = search(grid, (mv, end), memo);
-        // println!("{start:?} {here} ({}) -> {mv:?} -> {result}", ('a' as u8 + here) as char);
-        memo.insert(mv, res);
-
-        opts.push(res);
     }
-
-    let res = opts
-        .into_iter()
-        .min()
-        .and_then(|x| x.checked_add(1))
-        .unwrap_or(usize::MAX);
-    memo.insert(start, res);
-    res
 }
 
 fn find(grid: &[Vec<char>], c: char) -> (usize, usize) {
