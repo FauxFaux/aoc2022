@@ -1,32 +1,60 @@
 use itertools::Itertools;
 use serde_json::Value;
 use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
 
 pub fn solve() {
-    let grid = include_str!("d13.txt")
+    let mut grid = include_str!("d13.txt")
         .lines()
-        .tuples()
-        .map(|(a, b, _)| (p(a), p(b)))
+        .filter(|x| !x.trim().is_empty())
+        .map(p)
         .collect_vec();
 
-    let sorted = grid
-        .into_iter()
-        .enumerate()
-        .filter(|(_, (a, b))| a < b)
-        .map(|(p, _)| p + 1)
-        .sum::<usize>();
-    println!("{:#?}", sorted);
+    let d1 = p("[[2]]");
+    let d2 = p("[[6]]");
+    grid.push(d1.clone());
+    grid.push(d2.clone());
+    grid.sort();
+
+    for line in &grid {
+        println!("{line}");
+    }
+
+    let p1 = 1 + grid.iter().position(|x| x == &d1).unwrap();
+    let p2 = 1 + grid.iter().position(|x| x == &d2).unwrap();
+
+    println!("{p1} {p2} {}", p1 * p2);
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq)]
 enum V {
     L(Vec<V>),
     A(i64),
 }
 
+impl Display for V {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            V::A(x) => write!(f, "{}", x),
+            V::L(l) => write!(f, "[{}]", l.iter().map(|x| format!("{x}")).join(",")),
+        }
+    }
+}
+
+impl Ord for V {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
+impl PartialEq for V {
+    fn eq(&self, other: &Self) -> bool {
+        self.partial_cmp(other).unwrap() == Ordering::Equal
+    }
+}
+
 impl PartialOrd for V {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        use Ordering::*;
         use V::*;
         match (self, other) {
             (A(l), A(r)) => l.partial_cmp(r),

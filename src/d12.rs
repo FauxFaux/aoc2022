@@ -93,7 +93,3 @@ fn find(grid: &[Vec<char>], c: char) -> Vec<(usize, usize)> {
     }
     ret
 }
-
-fn c(v: u8) -> char {
-    ('a' as u8 + v) as char
-}
