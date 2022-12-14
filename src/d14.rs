@@ -1,7 +1,7 @@
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::collections::HashSet;
 
-type Pos = (i64, i64);
+type Pos = (i16, i16);
 
 pub fn solve() {
     let lines = include_str!("d14.txt")
@@ -9,10 +9,10 @@ pub fn solve() {
         .map(|x| x.split(" -> ").map(p).collect_vec())
         .collect_vec();
 
-    let mut grid = HashMap::<Pos, bool>::new();
+    let mut grid = HashSet::<Pos>::with_capacity(900_000);
     for line in &lines {
         let mut cursor = line[0];
-        grid.insert(cursor, true);
+        grid.insert(cursor);
         for coord in line {
             loop {
                 match (cursor.0 - coord.0, cursor.1 - coord.1) {
@@ -25,20 +25,19 @@ pub fn solve() {
                     }
                     (_, _) => unreachable!("diagonal lines {cursor:?} {coord:?}"),
                 }
-                grid.insert(cursor, true);
+                grid.insert(cursor);
             }
         }
     }
 
-    let bottom = *grid.keys().map(|(_, y)| y).max().unwrap();
+    let bottom = 1000 + *grid.iter().map(|(_, y)| y).max().unwrap();
     let mut rested = 0usize;
 
-    'sim: while !grid.get(&(500, 0)).copied().unwrap_or_default() {
+    while !grid.contains(&(500, 0)) {
         let mut sand: Pos = (500, 0);
         'sand: loop {
-            if sand.1 == bottom + 1 {
-                grid.insert(sand, true);
-                // println!("baselining: {sand:?}");
+            if sand.1 == bottom {
+                grid.insert(sand);
                 rested += 1;
                 break 'sand;
             }
@@ -47,13 +46,13 @@ pub fn solve() {
                 (sand.0 - 1, sand.1 + 1),
                 (sand.0 + 1, sand.1 + 1),
             ] {
-                if !*grid.get(&cand).unwrap_or(&false) {
+                if !grid.contains(&cand) {
                     // println!("{sand:?} -> {cand:?}");
                     sand = cand;
                     continue 'sand;
                 }
             }
-            grid.insert(sand, true);
+            grid.insert(sand);
             rested += 1;
             break;
         }
@@ -62,11 +61,11 @@ pub fn solve() {
     println!("{rested}");
 }
 
-fn p(s: &str) -> (i64, i64) {
+fn p(s: &str) -> Pos {
     let (a, b) = s.split_once(',').unwrap();
     (i(a), i(b))
 }
 
-fn i(s: &str) -> i64 {
+fn i(s: &str) -> i16 {
     s.parse().unwrap()
 }
