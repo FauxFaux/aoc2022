@@ -33,11 +33,14 @@ pub fn solve() {
     let bottom = *grid.keys().map(|(_, y)| y).max().unwrap();
     let mut rested = 0usize;
 
-    'sim: loop {
+    'sim: while !grid.get(&(500, 0)).copied().unwrap_or_default() {
         let mut sand: Pos = (500, 0);
         'sand: loop {
-            if sand.1 > bottom {
-                break 'sim;
+            if sand.1 == bottom + 1 {
+                grid.insert(sand, true);
+                // println!("baselining: {sand:?}");
+                rested += 1;
+                break 'sand;
             }
             for cand in [
                 (sand.0, sand.1 + 1),
