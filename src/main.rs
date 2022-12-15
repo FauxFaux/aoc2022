@@ -1,3 +1,5 @@
+#![feature(array_windows)]
+
 mod d1;
 mod d10;
 mod d11;

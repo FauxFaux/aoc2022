@@ -1,15 +1,7 @@
 use itertools::Itertools;
 use std::cmp::{max, min};
-use std::collections::{HashMap, HashSet};
 
 type Pos = (i64, i64);
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-enum Ent {
-    Sensor,
-    Beacon,
-    Excluded,
-}
 
 pub fn solve() {
     let lines = include_str!("d15.txt")
@@ -18,38 +10,45 @@ pub fn solve() {
             x.split(|c| matches!(c, ',' | '=' | ':'))
                 .tuples()
                 .map(|(_s, sx, _e, sy, _b, bx, _eo, by)| ((p(sx), p(sy)), (p(bx), p(by))))
+                .map(|(s, b)| (s, d(s, b)))
                 .next()
                 .unwrap()
         })
         .collect_vec();
 
-    let mut grid = HashMap::<Pos, Ent>::new();
+    let mx = 4000000;
 
-    for (s, b) in lines.iter().copied() {
-        grid.insert(s, Ent::Sensor);
-        grid.insert(b, Ent::Beacon);
-        let r = d(s, b);
-        println!("{s:?} {b:?} {r}");
-        for x in (s.0 - r)..=s.0 + r {
-            let y = 2000000;
-            // for y in s.1-r..=s.1+r {
-            //     if y != 2000000 { continue }
-            if d(s, (x, y)) <= r {
-                grid.entry((x, y)).or_insert(Ent::Excluded);
+    for y in 0..mx {
+        let mut ranges = Vec::new();
+        for (s, r) in lines.iter().copied() {
+            let yo = max(s.1, y) - min(s.1, y);
+            if yo > r {
+                continue;
             }
-            // }
+            let w = r - yo;
+
+            ranges.push((max(s.0 - w, 0), min(s.0 + w, mx)));
+        }
+        ranges.sort_by_key(|x| x.0);
+
+        for (es, e) in &ranges {
+            for (s, se) in &ranges {
+                let c = e + 1;
+                if c + 1 != *s {
+                    continue;
+                }
+                let mut bad = false;
+                for (s, e) in &ranges {
+                    if c >= *s && c <= *e {
+                        bad = true;
+                    }
+                }
+                if !bad {
+                    println!("{c} {y} {s}-{se} {es}-{e} {:?}", ranges);
+                }
+            }
         }
     }
-
-    // println!("{lines:?}");
-    // println!("{grid:?}");
-
-    let cnt = grid
-        .iter()
-        .filter(|((_, y), e)| *y == 2000000 && **e == Ent::Excluded)
-        .count();
-
-    println!("{}", cnt);
 }
 
 fn d(a: Pos, b: Pos) -> i64 {
