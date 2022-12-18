@@ -127,46 +127,47 @@ fn search(
 
     let mut opts = Vec::with_capacity(12);
 
-    let me_moving = min_me < min_ele;
+    for me_moving in [true, false] {
+        let here = if me_moving { me } else { ele };
+        let minute = if me_moving { min_me } else { min_ele };
 
-    let here = if me_moving { me } else { ele };
-    let minute = if me_moving { min_me } else { min_ele };
-
-    // if we've already been here, then it's a waste of time
-    if here != Key::new("AA") && on.insert(here, (minute, me_moving)).is_some() {
-        let fin = on
-            .iter()
-            .map(|(v, m)| weights[v].0 * (26 - m.0 as usize))
-            .sum();
-        if fin == 1704 {
-            let dbg = on
+        // if we've already been here, then it's a waste of time
+        if here != Key::new("AA") && on.insert(here, (minute, me_moving)).is_some() {
+            let fin = on
                 .iter()
-                .map(|(v, m)| ((m.0 as usize), v, m.1))
-                .sorted()
-                .collect_vec();
-            println!("{here} {dbg:?} {fin}");
+                .map(|(v, m)| weights[v].0 * (26usize.saturating_sub(m.0 as usize)))
+                .sum();
+            if fin == 1707 {
+                let dbg = on
+                    .iter()
+                    .map(|(v, m)| ((m.0 as usize), v, m.1))
+                    .sorted()
+                    .collect_vec();
+                println!("{here} {dbg:?} {fin}");
+            }
+            opts.push(fin);
+            continue;
         }
-        return fin;
-    }
 
-    for (dk, dmin) in &grid[&here] {
-        if here == Key::new("AA") && on.is_empty() {
-            println!("{me_moving} {dk} {dmin}");
+        for (dk, dmin) in &grid[&here] {
+            if here == Key::new("AA") && on.is_empty() {
+                println!("{me_moving} {dk} {dmin}");
+            }
+            let score = search(
+                weights,
+                grid,
+                if me_moving { [**dk, ele] } else { [me, **dk] },
+                if me_moving {
+                    [min_me + 1 + dmin, min_ele]
+                } else {
+                    [min_me, min_ele + 1 + dmin]
+                },
+                on.clone(),
+            );
+            // memo.insert((here, minute, flatten(&on)), score);
+            // println!("{minute} {here} -> {neigh} = {score}");
+            opts.push(score);
         }
-        let score = search(
-            weights,
-            grid,
-            if me_moving { [**dk, ele] } else { [me, **dk] },
-            if me_moving {
-                [min_me + 1 + dmin, min_ele]
-            } else {
-                [min_me, min_ele + 1 + dmin]
-            },
-            on.clone(),
-        );
-        // memo.insert((here, minute, flatten(&on)), score);
-        // println!("{minute} {here} -> {neigh} = {score}");
-        opts.push(score);
     }
 
     *opts.iter().max().unwrap_or(&0)
