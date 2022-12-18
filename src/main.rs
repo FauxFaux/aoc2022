@@ -10,6 +10,7 @@ mod d15;
 mod d16;
 mod d17;
 mod d18;
+mod d19;
 mod d2;
 mod d3;
 mod d4;
@@ -39,6 +40,7 @@ fn main() {
         16 => d16::solve(),
         17 => d17::solve(),
         18 => d18::solve(),
+        19 => d19::solve(),
         _ => unreachable!(),
     }
 }

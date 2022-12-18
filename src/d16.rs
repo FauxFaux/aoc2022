@@ -98,10 +98,6 @@ fn find(grid: &HashMap<Key, (usize, Box<[Key]>)>, from: Key, to: Key, dist: u8) 
     guesses.into_iter().min().unwrap_or(30)
 }
 
-fn flatten(on: &HashMap<Key, u8>) -> Vec<(Key, u8)> {
-    on.iter().map(|(x, y)| (*x, *y)).sorted().collect()
-}
-
 fn search(
     weights: &HashMap<Key, (usize, Box<[Key]>)>,
     grid: &HashMap<&Key, Vec<(&Key, u8)>>,
