@@ -68,12 +68,12 @@ pub fn solve() {
             derived.entry(from).or_insert(Vec::new()).push((to, dist));
         }
     }
-    println!("{derived:?}");
+    derived.iter_mut().for_each(|x| x.1.sort_by_key(|x| x.1));
+    println!("{derived:#?}");
 
-    let mut memo = HashMap::with_capacity(9000);
     let best = search(
         &graph,
-        &mut memo,
+        &derived,
         Key::new("AA"),
         0,
         HashMap::with_capacity(8),
@@ -82,7 +82,7 @@ pub fn solve() {
     println!("{best:?}")
 }
 
-fn find(grid: &HashMap<Key, (usize, Box<[Key]>)>, from: Key, to: Key, dist: usize) -> usize {
+fn find(grid: &HashMap<Key, (usize, Box<[Key]>)>, from: Key, to: Key, dist: u8) -> u8 {
     if dist > 13 {
         return dist;
     }
@@ -103,20 +103,24 @@ fn flatten(on: &HashMap<Key, u8>) -> Vec<(Key, u8)> {
 }
 
 fn search(
-    grid: &HashMap<Key, (usize, Box<[Key]>)>,
-    memo: &mut HashMap<(Key, u8, Vec<(Key, u8)>), usize>,
+    weights: &HashMap<Key, (usize, Box<[Key]>)>,
+    grid: &HashMap<&Key, Vec<(&Key, u8)>>,
+    // memo: &mut HashMap<(Key, u8, Vec<(Key, u8)>), usize>,
     here: Key,
     minute: u8,
-    on: HashMap<Key, u8>,
+    mut on: HashMap<Key, u8>,
 ) -> usize {
-    if let Some(existing) = memo.get(&(here, minute, flatten(&on))) {
-        return *existing;
-    }
+    // if let Some(existing) = memo.get(&(here, minute, flatten(&on))) {
+    //     return *existing;
+    // }
 
     if minute == 30 {
-        let fin = on.iter().map(|(v, m)| grid[v].0 * (29 - *m as usize)).sum();
-        // if fin > 1651 {
-        //     let dbg = on.iter().map(|(v, m)| (grid[v].0, (*m as usize))).collect_vec();
+        let fin = on
+            .iter()
+            .map(|(v, m)| weights[v].0 * (30 - *m as usize))
+            .sum();
+        // if fin == 1570 {
+        //     let dbg = on.iter().map(|(v, m)| ((*m as usize), v, weights[v].0)).sorted().collect_vec();
         //     println!("{here} {dbg:?} {fin}");
         // }
         return fin;
@@ -124,18 +128,22 @@ fn search(
 
     let mut opts = Vec::with_capacity(6);
 
-    let (v, neigh) = &grid[&here];
-    if *v != 0 && !on.contains_key(&here) {
-        let mut on = on.clone();
-        on.insert(here, minute);
-        let key = flatten(&on);
-        let score = search(grid, memo, here, minute + 1, on);
-        memo.insert((here, minute, key), score);
-        opts.push(score);
+    // if we've already been here, then it's a waste of time
+    if here != Key::new("AA") && on.insert(here, minute).is_some() {
+        return 0;
     }
 
-    for neigh in neigh.iter() {
-        let score = search(grid, memo, *neigh, minute + 1, on.clone());
+    for neigh in &grid[&here] {
+        if here == Key::new("AA") && on.is_empty() {
+            println!("{neigh:?}");
+        }
+        let score = search(
+            weights,
+            grid,
+            *neigh.0,
+            minute + 1 + (neigh.1 as u8),
+            on.clone(),
+        );
         // memo.insert((here, minute, flatten(&on)), score);
         // println!("{minute} {here} -> {neigh} = {score}");
         opts.push(score);
