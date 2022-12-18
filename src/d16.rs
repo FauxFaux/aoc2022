@@ -21,10 +21,48 @@ pub fn solve() {
         })
         .collect::<HashMap<&str, (usize, _)>>();
 
+    let mut interesting = graph
+        .iter()
+        .filter(|(_, (value, _))| *value != 0)
+        .map(|(dest, _)| *dest)
+        .collect_vec();
+
+    interesting.insert(0, "AA");
+    for from in &interesting {
+        for to in &interesting {
+            if from == to {
+                continue;
+            }
+            let dist = find(&graph, from, to, 0);
+            println!("{from} {to} {dist}");
+        }
+    }
+
     let mut memo = HashMap::with_capacity(9000);
     let best = search(&graph, &mut memo, "AA", 0, HashMap::with_capacity(8));
 
     println!("{best:?}")
+}
+
+fn find(
+    grid: &HashMap<&'static str, (usize, Box<[&'static str]>)>,
+    from: &str,
+    to: &str,
+    dist: usize,
+) -> usize {
+    if dist > 13 {
+        return dist;
+    }
+    if from == to {
+        return dist;
+    }
+
+    let mut guesses = Vec::with_capacity(8);
+    for cand in grid[from].1.iter() {
+        guesses.push(find(grid, cand, to, dist + 1));
+    }
+
+    guesses.into_iter().min().unwrap_or(30)
 }
 
 fn flatten(on: &HashMap<&'static str, u8>) -> Vec<(&'static str, u8)> {
