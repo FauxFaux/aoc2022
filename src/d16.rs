@@ -114,7 +114,7 @@ fn search(
     //     return *existing;
     // }
 
-    if minute == 30 {
+    if minute >= 30 {
         let fin = on
             .iter()
             .map(|(v, m)| weights[v].0 * (30 - *m as usize))
