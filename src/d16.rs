@@ -2,47 +2,34 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-struct Key(u16);
-
-impl Key {
-    fn new(s: &str) -> Key {
-        let [a, b]: [u8; 2] = s.bytes().collect_vec().try_into().unwrap();
-        Key((a as u16) * 256 + b as u16)
-    }
-}
-
-impl Display for Key {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            (self.0 / 256) as u8 as char,
-            self.0 as u8 as char
-        )
-    }
-}
-
-impl Debug for Key {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
-    }
-}
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, Debug)]
+struct Key(u8);
 
 pub fn solve() {
+    let mut key_names = Vec::new();
+    key_names.push("AA");
+    let mut name = |s: &'static str| match key_names.iter().position(|x| *x == s) {
+        Some(x) => Key(x as u8),
+        None => {
+            let x = key_names.len();
+            key_names.push(s);
+            Key(x as u8)
+        }
+    };
+
     let graph = include_str!("d16.txt")
         .lines()
         .map(|x| {
             let x = x
                 .split(|c| matches!(c, ';' | '=' | ' ' | ','))
                 .collect_vec();
-            let v = Key::new(x[1]);
+            let v = name(x[1]);
             let r = p(x[5]);
             let t = x[11..]
                 .iter()
                 .filter(|x| !x.is_empty())
                 // stupid ass-language
-                .map(|x| Key::new(x))
+                .map(|x| name(x))
                 .collect_vec()
                 .into_boxed_slice();
             (v, (r, t))
@@ -55,7 +42,7 @@ pub fn solve() {
         .map(|(dest, _)| *dest)
         .collect_vec();
 
-    interesting.insert(0, Key::new("AA"));
+    interesting.insert(0, Key(0));
 
     let mut derived = HashMap::with_capacity(interesting.len());
 
@@ -71,10 +58,15 @@ pub fn solve() {
     derived.iter_mut().for_each(|x| x.1.sort_by_key(|x| x.1));
     println!("{derived:#?}");
 
+    let mut weights = [0u8; 64];
+    for (k, v) in &graph {
+        weights[k.0 as usize] = v.0 as u8;
+    }
+
     let best = search(
-        &graph,
+        &weights,
         &derived,
-        [Key::new("AA"), Key::new("AA")],
+        [Key(0), Key(0)],
         [0, 0],
         HashMap::with_capacity(8),
     );
@@ -99,7 +91,7 @@ fn find(grid: &HashMap<Key, (usize, Box<[Key]>)>, from: Key, to: Key, dist: u8) 
 }
 
 fn search(
-    weights: &HashMap<Key, (usize, Box<[Key]>)>,
+    weights: &[u8; 64],
     grid: &HashMap<&Key, Vec<(&Key, u8)>>,
     // memo: &mut HashMap<(Key, u8, Vec<(Key, u8)>), usize>,
     here: [Key; 2],
@@ -115,8 +107,8 @@ fn search(
 
     if min_me >= 26 && min_ele >= 26 {
         let fin = on
-            .iter()
-            .map(|(v, m)| weights[v].0 * (26 - m.0 as usize))
+            .into_iter()
+            .map(|(v, m)| weights[v.0 as usize] as usize * (26 - m.0 as usize))
             .sum();
         // if fin == 1570 {
         //     let dbg = on.iter().map(|(v, m)| ((*m as usize), v, weights[v].0)).sorted().collect_vec();
@@ -131,27 +123,37 @@ fn search(
         let here = if me_moving { me } else { ele };
         let minute = if me_moving { min_me } else { min_ele };
 
+        if minute >= 26 {
+            continue;
+        }
+
         // if we've already been here, then it's a waste of time
-        if here != Key::new("AA") && on.insert(here, (minute, me_moving)).is_some() {
+        if here != Key(0) && on.insert(here, (minute, me_moving)).is_some() {
+            continue;
             let fin = on
                 .iter()
-                .map(|(v, m)| weights[v].0 * (26usize.saturating_sub(m.0 as usize)))
+                .map(|(v, m)| {
+                    weights[v.0 as usize] as usize * (26usize.saturating_sub(m.0 as usize))
+                })
                 .sum();
-            if fin == 1707 {
+            if fin >= 1855 {
                 let dbg = on
                     .iter()
                     .map(|(v, m)| ((m.0 as usize), v, m.1))
                     .sorted()
                     .collect_vec();
-                println!("{here} {dbg:?} {fin}");
+                println!("{here:?} {dbg:?} {fin}");
             }
             opts.push(fin);
             continue;
         }
 
         for (dk, dmin) in &grid[&here] {
-            if here == Key::new("AA") && on.is_empty() {
-                println!("{me_moving} {dk} {dmin}");
+            if here == Key(0) && on.is_empty() {
+                println!("{me_moving} {dk:?} {dmin}");
+            }
+            if **dk == Key(0) || on.contains_key(dk) {
+                continue;
             }
             let score = search(
                 weights,
