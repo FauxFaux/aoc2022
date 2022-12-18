@@ -1,2 +1,1 @@
-pub fn solve() {
-}
+pub fn solve() {}

@@ -74,8 +74,8 @@ pub fn solve() {
     let best = search(
         &graph,
         &derived,
-        Key::new("AA"),
-        0,
+        [Key::new("AA"), Key::new("AA")],
+        [0, 0],
         HashMap::with_capacity(8),
     );
 
@@ -102,18 +102,21 @@ fn search(
     weights: &HashMap<Key, (usize, Box<[Key]>)>,
     grid: &HashMap<&Key, Vec<(&Key, u8)>>,
     // memo: &mut HashMap<(Key, u8, Vec<(Key, u8)>), usize>,
-    here: Key,
-    minute: u8,
-    mut on: HashMap<Key, u8>,
+    here: [Key; 2],
+    minute: [u8; 2],
+    mut on: HashMap<Key, (u8, bool)>,
 ) -> usize {
     // if let Some(existing) = memo.get(&(here, minute, flatten(&on))) {
     //     return *existing;
     // }
 
-    if minute >= 30 {
+    let [me, ele] = here;
+    let [min_me, min_ele] = minute;
+
+    if min_me >= 26 && min_ele >= 26 {
         let fin = on
             .iter()
-            .map(|(v, m)| weights[v].0 * (30 - *m as usize))
+            .map(|(v, m)| weights[v].0 * (26 - m.0 as usize))
             .sum();
         // if fin == 1570 {
         //     let dbg = on.iter().map(|(v, m)| ((*m as usize), v, weights[v].0)).sorted().collect_vec();
@@ -122,22 +125,43 @@ fn search(
         return fin;
     }
 
-    let mut opts = Vec::with_capacity(6);
+    let mut opts = Vec::with_capacity(12);
+
+    let me_moving = min_me < min_ele;
+
+    let here = if me_moving { me } else { ele };
+    let minute = if me_moving { min_me } else { min_ele };
 
     // if we've already been here, then it's a waste of time
-    if here != Key::new("AA") && on.insert(here, minute).is_some() {
-        return 0;
+    if here != Key::new("AA") && on.insert(here, (minute, me_moving)).is_some() {
+        let fin = on
+            .iter()
+            .map(|(v, m)| weights[v].0 * (26 - m.0 as usize))
+            .sum();
+        if fin == 1704 {
+            let dbg = on
+                .iter()
+                .map(|(v, m)| ((m.0 as usize), v, m.1))
+                .sorted()
+                .collect_vec();
+            println!("{here} {dbg:?} {fin}");
+        }
+        return fin;
     }
 
-    for neigh in &grid[&here] {
+    for (dk, dmin) in &grid[&here] {
         if here == Key::new("AA") && on.is_empty() {
-            println!("{neigh:?}");
+            println!("{me_moving} {dk} {dmin}");
         }
         let score = search(
             weights,
             grid,
-            *neigh.0,
-            minute + 1 + (neigh.1 as u8),
+            if me_moving { [**dk, ele] } else { [me, **dk] },
+            if me_moving {
+                [min_me + 1 + dmin, min_ele]
+            } else {
+                [min_me, min_ele + 1 + dmin]
+            },
             on.clone(),
         );
         // memo.insert((here, minute, flatten(&on)), score);
