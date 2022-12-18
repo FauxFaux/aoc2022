@@ -166,6 +166,9 @@ fn search(
                 },
                 on.clone(),
             );
+            if here == Key(0) && on.is_empty() {
+                println!("-> {score}");
+            }
             // memo.insert((here, minute, flatten(&on)), score);
             // println!("{minute} {here} -> {neigh} = {score}");
             opts.push(score);
