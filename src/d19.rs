@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use rayon::prelude::*;
 
 #[derive(Copy, Clone, Debug)]
 struct Cost {
@@ -28,12 +29,15 @@ pub fn solve() {
             }
         })
         .collect_vec();
-    let mut sum = 0;
-    for (idx, bp) in bps.iter().enumerate() {
-        let s = score(bp);
-        println!("{idx}: {s}");
-        sum += (idx + 1) * s;
-    }
+    let sum: usize = bps
+        .par_iter()
+        .enumerate()
+        .map(|(idx, bp)| {
+            let s = score(bp);
+            println!("{idx}: {s}");
+            (idx + 1) * s
+        })
+        .sum();
     println!("{sum}")
 }
 
