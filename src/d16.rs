@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use std::collections::HashMap;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::Debug;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, Debug)]
 struct Key(u8);
@@ -129,22 +129,6 @@ fn search(
 
         // if we've already been here, then it's a waste of time
         if here != Key(0) && on.insert(here, (minute, me_moving)).is_some() {
-            continue;
-            let fin = on
-                .iter()
-                .map(|(v, m)| {
-                    weights[v.0 as usize] as usize * (26usize.saturating_sub(m.0 as usize))
-                })
-                .sum();
-            if fin >= 1855 {
-                let dbg = on
-                    .iter()
-                    .map(|(v, m)| ((m.0 as usize), v, m.1))
-                    .sorted()
-                    .collect_vec();
-                println!("{here:?} {dbg:?} {fin}");
-            }
-            opts.push(fin);
             continue;
         }
 
