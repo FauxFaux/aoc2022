@@ -4,24 +4,30 @@ pub fn solve() {
     let mut dat = include_str!("d20.txt")
         .lines()
         .map(p)
+        .map(|x| 811589153 * x)
         .enumerate()
         .collect_vec();
 
     let w = dat.len() as i64;
 
-    for i in 0..dat.len() {
-        let (start, (_orig, val)) = dat.iter().find_position(|(x, _)| *x == i).unwrap();
-        let dest = usize::try_from((start as i64 + *val + (w - 1) + (w - 1)) % (w - 1)).unwrap();
-        let taken = dat.remove(start);
-        // println!("removed: {:?}",
-        // dat.iter().map(|(_, x)| *x).collect_vec()
-        // );
-        dat.insert(if dest >= start { dest } else { dest }, taken);
+    for _ in 0..10 {
+        for i in 0..dat.len() {
+            let (start, (_orig, val)) = dat.iter().find_position(|(x, _)| *x == i).unwrap();
+            let dest = usize::try_from(
+                (start as i64 + *val + ((w - 1) * 1000 * 1000 * 1000 * 1000)) % (w - 1),
+            )
+            .unwrap();
+            let taken = dat.remove(start);
+            // println!("removed: {:?}",
+            // dat.iter().map(|(_, x)| *x).collect_vec()
+            // );
+            dat.insert(if dest >= start { dest } else { dest }, taken);
 
-        // println!(
-        //     "{taken:?} moves from {start} to {dest}, value: {:?}",
-        //     dat.iter().map(|(_, x)| *x).collect_vec()
-        // )
+            // println!(
+            //     "{taken:?} moves from {start} to {dest}, value: {:?}",
+            //     dat.iter().map(|(_, x)| *x).collect_vec()
+            // )
+        }
     }
 
     let key = dat.iter().position(|(_, x)| 0 == *x).unwrap();
