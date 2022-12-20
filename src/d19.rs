@@ -28,6 +28,7 @@ pub fn solve() {
                 geo_robot_obs: nums[5],
             }
         })
+        .take(3)
         .collect_vec();
     let sum: usize = bps
         .par_iter()
@@ -35,9 +36,9 @@ pub fn solve() {
         .map(|(idx, bp)| {
             let s = score(bp);
             println!("{idx}: {s}");
-            (idx + 1) * s
+            s
         })
-        .sum();
+        .product();
     println!("{sum}")
 }
 
@@ -72,7 +73,7 @@ fn score(costs: &Cost) -> usize {
 }
 
 fn search(costs: &Cost, state: State, minute: u8) -> usize {
-    if minute == 24 {
+    if minute == 32 {
         let state = state.step();
         // if state.robot_ore == 1
         //     && state.robot_clay == 4
