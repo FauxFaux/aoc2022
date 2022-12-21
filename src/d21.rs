@@ -56,9 +56,9 @@ pub fn solve() {
         }
         match op.get(name) {
             Some((l, o, r)) => format!("({}{o}{})", render((num, op), l), render((num, op), r)),
-            none => format!("x"),
+            _ => format!("x"),
         }
-    };
+    }
 
     println!("{}={}", render((&num, &op), &el), render((&num, &op), &er));
 }
