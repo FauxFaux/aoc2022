@@ -25,7 +25,10 @@ pub fn solve() {
             }
         });
 
-    while !num.contains_key("root") {
+    let (el, _, er) = op.remove("root").unwrap();
+    num.remove("humn").unwrap();
+
+    for _ in 0..1000 {
         op.retain(|name, (l, o, r)| match (num.get(l), num.get(r)) {
             (Some(l), Some(r)) => {
                 num.insert(
@@ -44,8 +47,20 @@ pub fn solve() {
         });
     }
 
-    println!("{num:?} {op:?}");
-    dbg!(num["root"]);
+    fn render(
+        (num, op): (&HashMap<Name, i64>, &HashMap<Name, (Name, char, Name)>),
+        name: &Name,
+    ) -> String {
+        if let Some(n) = num.get(name) {
+            return format!("{n}");
+        }
+        match op.get(name) {
+            Some((l, o, r)) => format!("({}{o}{})", render((num, op), l), render((num, op), r)),
+            none => format!("x"),
+        }
+    };
+
+    println!("{}={}", render((&num, &op), &el), render((&num, &op), &er));
 }
 
 fn p(s: &str) -> i64 {
