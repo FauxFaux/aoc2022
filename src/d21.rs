@@ -1,4 +1,5 @@
 use itertools::{Either, Itertools};
+use num_integer::Integer;
 use std::collections::HashMap;
 
 type Name = &'static str;
@@ -47,20 +48,70 @@ pub fn solve() {
         });
     }
 
-    fn render(
-        (num, op): (&HashMap<Name, i64>, &HashMap<Name, (Name, char, Name)>),
-        name: &Name,
-    ) -> String {
-        if let Some(n) = num.get(name) {
-            return format!("{n}");
-        }
-        match op.get(name) {
-            Some((l, o, r)) => format!("({}{o}{})", render((num, op), l), render((num, op), r)),
-            _ => format!("x"),
+    println!("{}={}", render((&num, &op), &el), render((&num, &op), &er));
+
+    let mut targ = num[er];
+    let mut here = el;
+
+    loop {
+        let (l, o, r) = op[here];
+        println!("({l}: {:?}) {o} ({r}: {:?})", num.get(l), num.get(r));
+        match (num.get(l), num.get(r)) {
+            (Some(l), None) => {
+                match o {
+                    '*' => {
+                        let (d, r) = targ.div_rem(l);
+                        assert_eq!(r, 0);
+                        targ = d;
+                    }
+                    '+' => {
+                        targ -= *l;
+                    }
+                    '-' => {
+                        targ = *l - targ;
+                    }
+                    o => todo!("l {o:?}"),
+                }
+                println!("{} = {}", render((&num, &op), &r), targ);
+                here = r;
+            }
+            (None, Some(r)) => {
+                match o {
+                    '/' => {
+                        targ *= *r;
+                    }
+                    '-' => {
+                        targ += *r;
+                    }
+                    '+' => {
+                        targ -= *r;
+                    }
+                    '*' => {
+                        let (d, r) = targ.div_rem(r);
+                        assert_eq!(r, 0);
+                        targ = d;
+                    }
+                    o => todo!("r {o:?}"),
+                }
+                println!("{} = {}", render((&num, &op), &l), targ);
+                here = l;
+            }
+            other => todo!("{other:?}"),
         }
     }
+}
 
-    println!("{}={}", render((&num, &op), &el), render((&num, &op), &er));
+fn render(
+    (num, op): (&HashMap<Name, i64>, &HashMap<Name, (Name, char, Name)>),
+    name: &Name,
+) -> String {
+    if let Some(n) = num.get(name) {
+        return format!("{n}");
+    }
+    match op.get(name) {
+        Some((l, o, r)) => format!("({}{o}{})", render((num, op), l), render((num, op), r)),
+        _ => format!("x"),
+    }
 }
 
 fn p(s: &str) -> i64 {
