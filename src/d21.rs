@@ -110,7 +110,7 @@ fn render(
     }
     match op.get(name) {
         Some((l, o, r)) => format!("({}{o}{})", render((num, op), l), render((num, op), r)),
-        _ => format!("x"),
+            _ => format!("x"),
     }
 }
 
