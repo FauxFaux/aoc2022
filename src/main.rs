@@ -1,4 +1,5 @@
 #![feature(array_windows)]
+#![feature(array_chunks)]
 
 extern crate core;
 

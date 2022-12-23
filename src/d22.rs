@@ -1,3 +1,5 @@
+#![allow(warnings, unused)]
+
 use itertools::Itertools;
 
 #[derive(Debug, Copy, Clone)]
@@ -62,32 +64,87 @@ pub fn solve() {
         })
         .collect_vec();
 
+    const CS: usize = 50;
+
+    let mut faces = Vec::new();
+
+    for outer in grid.array_chunks::<CS>() {
+        // what even is this, itertools
+        let mut parts = vec![Vec::new(); 8];
+        for line in outer {
+            for (pos, inner) in line.array_chunks::<CS>().enumerate() {
+                parts[pos].push(inner);
+            }
+        }
+
+        faces.extend(
+            parts
+                .into_iter()
+                .filter(|x| !x.is_empty())
+                .filter(|x| x[0][0].is_some())
+                .map(|x| x.into_iter().map(|x| x.map(|x| x.unwrap())).collect_vec()),
+        );
+    }
+
+    assert_eq!(6, faces.len());
+
+    /// .01
+    /// .2.
+    /// 34.
+    /// 5..
+    /// https://quad.pe/e/ywZgQqDgMQ.png
+    /// back: 0 (top points towards the top)
+    /// right: 1 (top points towards the top)
+    /// bottom: 2 (top points towards the back)
+    /// left: 3 (top points towards the bottom)
+    /// front: 4 (top points towards the bottom)
+    /// top: 5 (top points towards the left)
+    use Dir::*;
+    let trans = |face: u8, dir: Dir| match (face, dir) {
+        (2, N) => (0, N),
+        other => unreachable!("{other:?}"),
+    };
+
     println!("{cmds:?}");
 
-    let mut here: Pos = (grid[0].iter().position(|&x| x == Some(false)).unwrap(), 0);
-    let mut face = Dir::E;
+    let mut face = 0;
+    let mut grid = &faces[0];
+    let mut here: Pos = (grid[0].iter().position(|&x| x == false).unwrap(), 0);
+    let mut heading = E;
 
-    let max_x = grid[0].len() as i64;
-    let max_y = grid.len() as i64;
+    let max_x = faces[0][0].len() as i64;
+    let max_y = faces[0].len() as i64;
 
     for cmd in cmds {
         match cmd {
             Move(dist) => {
                 println!("{here:?}, {dist} to move, {face:?}");
-                let (dx, dy) = face.diff();
+                let (dx, dy) = heading.diff();
                 'mov: for step in 0..dist {
                     let (mut cx, mut cy) = (here.0 as i64, here.1 as i64);
                     'wrap: loop {
-                        cx = (cx + dx + max_x) % max_x;
-                        cy = (cy + dy + max_y) % max_y;
-                        match grid[cy as usize]
-                            .get(cx as usize)
-                            .copied()
-                            .unwrap_or_default()
-                        {
-                            None => (),
-                            Some(false) => break 'wrap,
-                            Some(true) => break 'mov,
+                        cx += dx;
+                        cy += dy;
+                        if cx > max_x {
+                            (face, heading) = trans(face, heading);
+                            cx = 0;
+                        }
+                        if cy > max_y {
+                            (face, heading) = trans(face, heading);
+                            cy = 0;
+                        }
+                        if cx < 0 {
+                            (face, heading) = trans(face, heading);
+                            cx = max_x;
+                        }
+                        if cy < 0 {
+                            (face, heading) = trans(face, heading);
+                            cy = max_y;
+                        }
+                        grid = &faces[face as usize];
+                        match grid[cy as usize][cx as usize] {
+                            false => (),
+                            true => break 'mov,
                         }
                         // println!("{:?} + {:?} is still inside a void", (cx, cy), (dx, dy));
                     }
@@ -96,7 +153,7 @@ pub fn solve() {
                 }
             }
             TurnLeft => {
-                face = match face {
+                heading = match heading {
                     Dir::N => Dir::W,
                     Dir::W => Dir::S,
                     Dir::S => Dir::E,
@@ -104,7 +161,7 @@ pub fn solve() {
                 };
             }
             TurnRight => {
-                face = match face {
+                heading = match heading {
                     Dir::N => Dir::E,
                     Dir::E => Dir::S,
                     Dir::S => Dir::W,
