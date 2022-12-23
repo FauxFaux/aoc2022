@@ -18,6 +18,7 @@ mod d2;
 mod d20;
 mod d21;
 mod d22;
+mod d23;
 mod d3;
 mod d4;
 mod d5;
@@ -27,7 +28,7 @@ mod d8;
 mod d9;
 
 fn main() {
-    match 22 {
+    match 23 {
         1 => d1::solve(),
         2 => d2::solve(),
         3 => d3::solve(),
@@ -50,6 +51,7 @@ fn main() {
         20 => d20::solve(),
         21 => d21::solve(),
         22 => d22::solve(),
+        23 => d23::solve(),
         _ => unreachable!(),
     }
 }
