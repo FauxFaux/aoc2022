@@ -34,7 +34,7 @@ pub fn solve() {
 
     let mut moves = VecDeque::from([N, S, W, E]);
 
-    for round in 0..10 {
+    for round in 0usize.. {
         println!();
         println!("{round} {moves:?}");
 
@@ -80,6 +80,7 @@ pub fn solve() {
             }
         }
 
+        let mut ops = 0usize;
         for (cand, who) in proposals {
             if who.len() > 1 {
                 continue;
@@ -87,6 +88,11 @@ pub fn solve() {
             let who = who[0];
             grid.remove(&who);
             assert!(grid.insert(cand));
+            ops += 1;
+        }
+        if 0 == ops {
+            println!("round: {round}");
+            break;
         }
         moves.rotate_left(1);
         for y in -2..10 {
