@@ -68,11 +68,11 @@ pub fn solve() {
     for s in 0..w * h {
         println!("step {s}/{}", w * h);
         // print((w, h), &storms);
-        let mut grid = vec![vec![true; w + 2]; h + 2];
+        let mut grid = vec![vec![true; w + 2]; h + 3];
         // lol
-        for y in 0..h + 2 {
+        for y in 0..h + 3 {
             for x in 0..w + 2 {
-                if x == 0 || y == 0 || x == w + 1 || y == h + 1 {
+                if x == 0 || y == 0 || x == w + 1 || y >= h + 1 {
                     grid[y][x] = false;
                 }
             }
@@ -94,13 +94,20 @@ pub fn solve() {
         // println!();
     }
 
+    let one = search((start, 0), end, &grids);
+    println!("{one}");
+    let two = search((end, one), start, &grids);
+    let three = search((start, two), end, &grids);
+    println!("{three}");
+}
+
+fn search(start: (Pos, usize), end: Pos, grids: &Vec<Vec<Vec<bool>>>) -> usize {
     let mut visited: HashSet<(Pos, usize)> = HashSet::with_capacity(9000);
     let mut queue = VecDeque::new();
-    queue.push_back((start, 0));
+    queue.push_back(start);
     while let Some(((ix, iy), movno)) = queue.pop_front() {
         if (ix, iy) == end {
-            println!("{movno}");
-            break;
+            return movno;
         }
         let newno = (movno + 1) % grids.len();
         let grid = &grids[newno];
@@ -118,6 +125,7 @@ pub fn solve() {
             }
         }
     }
+    unreachable!()
 }
 
 fn print((w, h): (usize, usize), storms: &Storms) {
