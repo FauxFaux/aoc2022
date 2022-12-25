@@ -148,16 +148,39 @@ pub fn solve() {
     let max_x = faces[0][0].len() as i64;
     let max_y = faces[0].len() as i64;
 
-    for cmd in cmds {
-        match cmd {
+    let to_map = |face: u8, (x, y): (usize, usize)| {
+        let (dx, dy) = match face {
+            0 => (50, 0),
+            1 => (100, 0),
+            2 => (50, 50),
+            3 => (0, 100),
+            4 => (50, 100),
+            5 => (0, 150),
+            o => unreachable!("{o}"),
+        };
+        (x + dx, y + dy)
+    };
+
+    for (i, cmd) in cmds.iter().enumerate() {
+        match *cmd {
             Move(dist) => {
-                println!("{here:?}@{face:?}, {heading:?}, {dist} to move");
-                let (dx, dy) = heading.diff();
+                // println!("{i}: {:?}@{face:?}, {heading:?}, {dist} to move", to_map(face, here));
+                println!(
+                    "{i}: {:?}, {}, {dist} to move       || {here:?}@{face:?}",
+                    to_map(face, here),
+                    match heading {
+                        E => 0,
+                        S => 1,
+                        W => 2,
+                        N => 3,
+                    }
+                );
                 'mov: for step in 0..dist {
                     let (mut cx, mut cy) = (here.0 as i64, here.1 as i64);
                     let mut cf = face;
                     let mut ch = heading;
                     'wrap: loop {
+                        let (dx, dy) = ch.diff();
                         cx += dx;
                         cy += dy;
                         if cx >= max_x {
@@ -176,11 +199,15 @@ pub fn solve() {
                             (cf, ch) = trans(cf, ch);
                             cy = max_y - 1;
                         }
+                        if i == 384 {
+                            println!("step: {:?}@{cf}, {ch:?}", (cx, cy));
+                            // print(&faces[cf as usize], (cx as usize, cy as usize));
+                        }
                         match faces[cf as usize][cy as usize][cx as usize] {
                             false => break 'wrap,
                             true => {
                                 println!("{:?}@{cf}, {ch:?}: wall", (cx, cy));
-                                print(&faces[face as usize], here);
+                                // print(&faces[face as usize], here);
 
                                 break 'mov;
                             }
