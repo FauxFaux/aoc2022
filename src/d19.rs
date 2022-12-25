@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use rayon::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Copy, Clone, Debug)]
 struct Cost {
@@ -34,7 +35,7 @@ pub fn solve() {
         .par_iter()
         .enumerate()
         .map(|(idx, bp)| {
-            let s = score(bp);
+            let s = score(idx, bp);
             println!("{idx}: {s}");
             s
         })
@@ -42,7 +43,7 @@ pub fn solve() {
     println!("{sum}")
 }
 
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug, Hash, Eq, PartialEq)]
 struct State {
     ore: usize,
     clay: usize,
@@ -66,62 +67,58 @@ impl State {
     }
 }
 
-fn score(costs: &Cost) -> usize {
+fn score(hint: usize, costs: &Cost) -> usize {
     let mut init = State::default();
     init.robot_ore = 1;
-    search(costs, init, 1)
-}
+    let mut previous_states = vec![init];
+    for minute in 1.. {
+        let mut states = HashSet::with_capacity(previous_states.len() * 5);
 
-fn search(costs: &Cost, state: State, minute: u8) -> usize {
-    if minute == 32 {
-        let state = state.step();
-        // if state.robot_ore == 1
-        //     && state.robot_clay == 4
-        //     && state.robot_obs == 2
-        //     && state.robot_geo == 2
-        //     && state.geo == 9
-        // {
-        //     println!("{state:?}");
-        // }
-        // if state.geo > 8 {
-        //     println!("{state:?}");
-        // }
-        return state.geo;
+        for state in previous_states {
+            if state.ore >= costs.geo_robot_ore && state.obs >= costs.geo_robot_obs {
+                let mut state = state.step();
+                state.ore -= costs.geo_robot_ore;
+                state.obs -= costs.geo_robot_obs;
+                state.robot_geo += 1;
+                states.insert(state);
+                continue;
+            }
+
+            if state.ore >= costs.obs_robot_ore && state.clay >= costs.obs_robot_clay {
+                let mut state = state.step();
+                state.ore -= costs.obs_robot_ore;
+                state.clay -= costs.obs_robot_clay;
+                state.robot_obs += 1;
+                states.insert(state);
+            }
+
+            if state.ore >= costs.clay_robot_ore {
+                let mut state = state.step();
+                state.ore -= costs.clay_robot_ore;
+                state.robot_clay += 1;
+                states.insert(state);
+            }
+
+            if state.ore >= costs.ore_robot_ore {
+                let mut state = state.step();
+                state.ore -= costs.ore_robot_ore;
+                state.robot_ore += 1;
+                states.insert(state);
+            }
+
+            states.insert(state.step());
+        }
+
+        let best = states.iter().max_by_key(|s| s.geo).unwrap();
+
+        println!("{hint} minute {minute}, {} states: {best:?}", states.len());
+
+        if minute == 32 {
+            return best.geo;
+        }
+
+        previous_states = states.into_iter().collect();
     }
 
-    let mut found = 0;
-
-    if state.ore >= costs.geo_robot_ore && state.obs >= costs.geo_robot_obs {
-        let mut state = state.step();
-        state.ore -= costs.geo_robot_ore;
-        state.obs -= costs.geo_robot_obs;
-        state.robot_geo += 1;
-        return search(costs, state, minute + 1);
-    }
-
-    if state.ore >= costs.obs_robot_ore && state.clay >= costs.obs_robot_clay {
-        let mut state = state.step();
-        state.ore -= costs.obs_robot_ore;
-        state.clay -= costs.obs_robot_clay;
-        state.robot_obs += 1;
-        found = found.max(search(costs, state, minute + 1));
-    }
-
-    if state.ore >= costs.clay_robot_ore {
-        let mut state = state.step();
-        state.ore -= costs.clay_robot_ore;
-        state.robot_clay += 1;
-        found = found.max(search(costs, state, minute + 1));
-    }
-
-    if state.ore >= costs.ore_robot_ore {
-        let mut state = state.step();
-        state.ore -= costs.ore_robot_ore;
-        state.robot_ore += 1;
-        found = found.max(search(costs, state, minute + 1));
-    }
-
-    found = found.max(search(costs, state.step(), minute + 1));
-
-    found
+    unreachable!();
 }

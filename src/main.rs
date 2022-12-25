@@ -30,7 +30,7 @@ mod d8;
 mod d9;
 
 fn main() {
-    match 25 {
+    match 19 {
         1 => d1::solve(),
         2 => d2::solve(),
         3 => d3::solve(),
