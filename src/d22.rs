@@ -9,7 +9,7 @@ enum Cmd {
     Move(usize),
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Dir {
     N,
     E,
@@ -25,6 +25,16 @@ impl Dir {
             S => (0, 1),
             E => (1, 0),
             W => (-1, 0),
+        }
+    }
+
+    fn flip(&self) -> Self {
+        use Dir::*;
+        match self {
+            N => S,
+            S => N,
+            E => W,
+            W => E,
         }
     }
 }
@@ -93,23 +103,46 @@ pub fn solve() {
     /// 34.
     /// 5..
     /// https://quad.pe/e/ywZgQqDgMQ.png
-    /// back: 0 (top points towards the top)
-    /// right: 1 (top points towards the top)
-    /// bottom: 2 (top points towards the back)
-    /// left: 3 (top points towards the bottom)
-    /// front: 4 (top points towards the bottom)
-    /// top: 5 (top points towards the left)
     use Dir::*;
     let trans = |face: u8, dir: Dir| match (face, dir) {
+        (0, N) => (5, E),
+        (0, E) => (1, E),
+        (0, S) => (2, S),
+        (0, W) => (3, E),
+        (1, N) => (5, N),
+        (1, E) => (4, W),
+        (1, S) => (2, W),
+        (1, W) => (0, W),
         (2, N) => (0, N),
+        (2, E) => (1, N),
+        (2, S) => (4, S),
+        (2, W) => (3, S),
+        (3, N) => (2, E),
+        (3, E) => (4, E),
+        (3, S) => (5, S),
+        (3, W) => (0, E),
+        (4, N) => (2, N),
+        (4, E) => (1, W),
+        (4, S) => (5, W),
+        (4, W) => (3, W),
+        (5, N) => (3, N),
+        (5, E) => (4, N),
+        (5, S) => (1, S),
+        (5, W) => (0, S),
         other => unreachable!("{other:?}"),
     };
 
-    println!("{cmds:?}");
+    for face in 0..6 {
+        for dir in [N, S, E, W] {
+            let (nf, nd) = trans(face, dir);
+            assert_eq!((face, dir.flip()), trans(nf, nd.flip()));
+        }
+    }
+
+    // println!("{cmds:?}");
 
     let mut face = 0;
-    let mut grid = &faces[0];
-    let mut here: Pos = (grid[0].iter().position(|&x| x == false).unwrap(), 0);
+    let mut here: Pos = (faces[0][0].iter().position(|&x| x == false).unwrap(), 0);
     let mut heading = E;
 
     let max_x = faces[0][0].len() as i64;
@@ -118,38 +151,52 @@ pub fn solve() {
     for cmd in cmds {
         match cmd {
             Move(dist) => {
-                println!("{here:?}, {dist} to move, {face:?}");
+                println!("{here:?}@{face:?}, {heading:?}, {dist} to move");
                 let (dx, dy) = heading.diff();
                 'mov: for step in 0..dist {
                     let (mut cx, mut cy) = (here.0 as i64, here.1 as i64);
+                    let mut cf = face;
+                    let mut ch = heading;
                     'wrap: loop {
                         cx += dx;
                         cy += dy;
-                        if cx > max_x {
-                            (face, heading) = trans(face, heading);
+                        if cx >= max_x {
+                            (cf, ch) = trans(cf, ch);
                             cx = 0;
                         }
-                        if cy > max_y {
-                            (face, heading) = trans(face, heading);
+                        if cy >= max_y {
+                            (cf, ch) = trans(cf, ch);
                             cy = 0;
                         }
                         if cx < 0 {
-                            (face, heading) = trans(face, heading);
-                            cx = max_x;
+                            (cf, ch) = trans(cf, ch);
+                            cx = max_x - 1;
                         }
                         if cy < 0 {
-                            (face, heading) = trans(face, heading);
-                            cy = max_y;
+                            (cf, ch) = trans(cf, ch);
+                            cy = max_y - 1;
                         }
-                        grid = &faces[face as usize];
-                        match grid[cy as usize][cx as usize] {
-                            false => (),
-                            true => break 'mov,
+                        match faces[cf as usize][cy as usize][cx as usize] {
+                            false => break 'wrap,
+                            true => {
+                                println!("{:?}@{cf}, {ch:?}: wall", (cx, cy));
+                                print(&faces[face as usize], here);
+
+                                break 'mov;
+                            }
                         }
-                        // println!("{:?} + {:?} is still inside a void", (cx, cy), (dx, dy));
                     }
-                    println!("{step}: stepped from {here:?} to {:?}", (cx, cy));
+                    if cf != face {
+                        // print(&faces[face as usize], here);
+                        println!(
+                            "{here:?}@{face}, {heading:?} to {:?}@{cf}, {ch:?}",
+                            (cx, cy)
+                        );
+                        // print(&faces[cf as usize], (cx as usize, cy as usize));
+                    }
                     here = (cx as usize, cy as usize);
+                    face = cf;
+                    heading = ch;
                 }
             }
             TurnLeft => {
@@ -171,7 +218,22 @@ pub fn solve() {
         }
     }
 
-    println!("{here:?} {face:?}");
+    // 39185 too low
+    // 137058 too low
+    println!("{face} {here:?} {heading:?}");
+}
+
+fn print(face: &[[bool; 50]], p: (usize, usize)) {
+    for (gy, row) in face.iter().enumerate() {
+        for (gx, column) in row.iter().enumerate() {
+            if (gx, gy) == p {
+                print!("X");
+            } else {
+                print!("{}", if *column { '.' } else { '_' });
+            }
+        }
+        println!();
+    }
 }
 
 fn p(s: &str) -> usize {
