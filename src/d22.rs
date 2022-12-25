@@ -132,6 +132,24 @@ pub fn solve() {
         other => unreachable!("{other:?}"),
     };
 
+    let o = 49;
+
+    let rot = |s: Dir, d: Dir, (x, y): (i64, i64)| -> (i64, i64) {
+        match (s, d) {
+            (E, E) => (0, y),
+            (S, S) => (x, 0),
+            (W, W) => (o, y),
+            (N, N) => (x, o),
+            (W, E) => (0, o - y),
+            (S, W) => (o, x),
+            (E, N) => (y, o),
+            (E, W) => (o, o - y),
+            (N, E) => (0, x),
+            (W, S) => (y, 0),
+            o => unimplemented!("{o:?}"),
+        }
+    };
+
     for face in 0..6 {
         for dir in [N, S, E, W] {
             let (nf, nd) = trans(face, dir);
@@ -183,30 +201,22 @@ pub fn solve() {
                         let (dx, dy) = ch.diff();
                         cx += dx;
                         cy += dy;
-                        if cx >= max_x {
+                        if cx >= max_x || cy >= max_y || cx < 0 || cy < 0 {
+                            let bh = ch;
                             (cf, ch) = trans(cf, ch);
-                            cx = 0;
+                            (cx, cy) = rot(bh, ch, (cx, cy));
                         }
-                        if cy >= max_y {
-                            (cf, ch) = trans(cf, ch);
-                            cy = 0;
-                        }
-                        if cx < 0 {
-                            (cf, ch) = trans(cf, ch);
-                            cx = max_x - 1;
-                        }
-                        if cy < 0 {
-                            (cf, ch) = trans(cf, ch);
-                            cy = max_y - 1;
-                        }
+
                         if i == 384 {
                             println!("step: {:?}@{cf}, {ch:?}", (cx, cy));
                             // print(&faces[cf as usize], (cx as usize, cy as usize));
                         }
-                        match faces[cf as usize][cy as usize][cx as usize] {
+                        match faces[cf as usize][usize::try_from(cy).unwrap()]
+                            [usize::try_from(cx).unwrap()]
+                        {
                             false => break 'wrap,
                             true => {
-                                println!("{:?}@{cf}, {ch:?}: wall", (cx, cy));
+                                // println!("{:?}@{cf}, {ch:?}: wall", (cx, cy));
                                 // print(&faces[face as usize], here);
 
                                 break 'mov;
@@ -248,6 +258,19 @@ pub fn solve() {
     // 39185 too low
     // 137058 too low
     println!("{face} {here:?} {heading:?}");
+    let map = to_map(face, here);
+    println!("{:?}", map);
+    println!(
+        "{}",
+        1000 * (map.1 + 1)
+            + 4 * (map.0 + 1)
+            + match heading {
+                E => 0,
+                S => 1,
+                W => 2,
+                N => 3,
+            }
+    );
 }
 
 fn print(face: &[[bool; 50]], p: (usize, usize)) {
