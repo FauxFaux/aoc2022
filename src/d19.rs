@@ -68,6 +68,8 @@ impl State {
 }
 
 fn score(hint: usize, costs: &Cost) -> usize {
+    let end = 32;
+
     let mut init = State::default();
     init.robot_ore = 1;
     let mut previous_states = vec![init];
@@ -109,15 +111,29 @@ fn score(hint: usize, costs: &Cost) -> usize {
             states.insert(state.step());
         }
 
-        let best = states.iter().max_by_key(|s| s.geo).unwrap();
+        let rem = end - minute;
+        let no_action_expected = |state: &State| state.geo + rem * state.robot_geo;
+        let expected = states
+            .iter()
+            .map(no_action_expected)
+            .max()
+            .unwrap_or_default();
 
-        println!("{hint} minute {minute}, {} states: {best:?}", states.len());
+        println!(
+            "{hint} minute {minute}, {} states, expected: {expected:?}",
+            states.len()
+        );
 
-        if minute == 32 {
-            return best.geo;
+        if minute == end {
+            return states.iter().map(|s| s.geo).max().unwrap();
         }
 
-        previous_states = states.into_iter().collect();
+        let possible_to_make = (rem) * (rem + 1) / 2;
+
+        previous_states = states
+            .into_iter()
+            .filter(|s| no_action_expected(s) + possible_to_make >= expected)
+            .collect();
     }
 
     unreachable!();
